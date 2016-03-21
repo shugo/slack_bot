@@ -11,25 +11,17 @@ class Slack
   class << self
     def tweet_resevations
       reservations = parse_json
+      return if reservations.empty?
+
       today = Time.now.strftime('%Y/%m/%d')
-
-      tweet_text = if reservations.empty?
-                     <<-EOS
-本日(#{today})は会議室予約がありません。
-
-#{CALENDAR_URL}
-                   EOS
-                   else
-                     <<-EOS
+      url = CALENDAR_URL + "?view=agendaDay&date=today"
+      post(<<-EOS)
 本日(#{today})の会議室予約状況です。
 
 #{reservations.join("\n")}
 
-#{CALENDAR_URL}
-                   EOS
-                   end
-
-      post(tweet_text)
+#{url}
+      EOS
     end
 
 
