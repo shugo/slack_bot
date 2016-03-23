@@ -5,6 +5,7 @@ CALENDAR_URL = ENV['CALENDAR_URL']
 require 'net/http'
 require 'uri'
 require 'json'
+require 'date'
 require 'time'
 
 class Slack
@@ -13,10 +14,10 @@ class Slack
       reservations = parse_json
       return if reservations.empty?
 
-      today = Time.now.strftime('%Y/%m/%d')
-      url = CALENDAR_URL + "?view=agendaDay&date=today"
+      today = Date.today
+      url = CALENDAR_URL + "?view=agendaDay&date=" + today.to_s
       post(<<-EOS)
-本日(#{today})の会議室予約状況です。
+本日(#{today.strftime("%Y/%m/%d")})の会議室予約状況です。
 
 #{reservations.join("\n")}
 
