@@ -40,7 +40,7 @@ class Slack
         start_time = Time.parse(reservation['start']).strftime('%H:%M')
         end_time = Time.parse(reservation['end']).strftime('%H:%M')
         reservation_time = "#{start_time}-#{end_time}"
-        title_and_room = "#{reservation['title']}  #{reservation['room']}（#{reservation['office']）"
+        title_and_room = "#{reservation['title']}  #{reservation['room']}（#{reservation['office']}）"
         reservations << "#{reservation_time}  #{title_and_room}"
       end
 
