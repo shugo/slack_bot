@@ -17,9 +17,9 @@ class Slack
       today = Date.today
       url = CALENDAR_URL + "?view=agendaDay&date=" + today.to_s
       post(<<-EOS)
-本日(#{today.strftime("%Y/%m/%d")})の会議室予約状況です。
+本日(#{today.strftime("%Y/%m/%d")})の予定です。
 
-#{reservations.join("\n")}
+#{reservations}
 
 #{url}
       EOS
@@ -27,24 +27,32 @@ class Slack
 
 
     private
+
     def get_json
       uri = URI.join(URI.parse(CALENDAR_URL), '/calendar/reservations')
       Net::HTTP.get(uri)
     end
 
     def parse_json
-      parsed_json = JSON.parse(get_json)
-      reservations = []
-
-      parsed_json.each do |reservation|
-        start_time = Time.parse(reservation['start']).strftime('%H:%M')
-        end_time = Time.parse(reservation['end']).strftime('%H:%M')
-        reservation_time = "#{start_time}-#{end_time}"
-        title_and_room = "#{reservation['title']}  #{reservation['room']}（#{reservation['office']}）"
-        reservations << "#{reservation_time}  #{title_and_room}"
-      end
-
-      reservations
+      JSON.parse(get_json).sort_by { |reservation|
+        reservation["office"] || ""
+      }.group_by { |reservation|
+        reservation["room"]
+      }.map { |room, reservations|
+        office = reservations[0]['office']
+        if office && !office.empty?
+          "□#{room}（#{reservations[0]['office']}）\n"
+        else
+          "□#{room}\n"
+        end + reservations.sort_by { |reservation|
+          reservation['start']
+        }.map { |reservation|
+          start_time = Time.parse(reservation['start']).strftime('%H:%M')
+          end_time = Time.parse(reservation['end']).strftime('%H:%M')
+          reservation_time = "#{start_time}-#{end_time}"
+          "#{start_time}-#{end_time}  #{reservation['title']}\n"
+        }.join
+      }.join
     end
 
     def post(text)
